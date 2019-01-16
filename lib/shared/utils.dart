@@ -33,6 +33,18 @@ class Utilities {
     );
   }
 
+  //events color
+  static const Color blueOne = Color.fromARGB(255, 31, 40, 90);
+  //social media color
+  static const Color blueTwo = Color.fromARGB(255, 54, 84, 144);
+  //our apps color
+  static const Color blueThree = Color.fromARGB(255, 82, 122, 170);
+  //media color
+  static const Color blueFour = Color.fromARGB(255, 127, 177, 210);
+  //miscellaneous color
+  static const Color blueFive = Color.fromARGB(255, 154, 215, 255);
+
+
   static StatefulWidget getPageFromId(String id) {
 
     StatefulWidget pageWidget;

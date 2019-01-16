@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
       ),
         appBar: AppBar(
           //automaticallyImplyLeading: false,
-          title: Text(widget.title),
+          title: Center(child: Image.asset('assets/t4h_full_logo.png', width:120),),
           backgroundColor: Color.fromARGB(255, 18, 20, 61),
           
         ),
