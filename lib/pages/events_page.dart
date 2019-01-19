@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../shared/utils.dart';
 import '../models/event.dart';
-import 'dart:async';
+import '../shared/api.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+//import 'package:date_format/date_format.dart';
+import '../pages/event_details_page.dart';
 
 class EventsPage extends StatefulWidget {
   final String title;
@@ -16,38 +17,107 @@ class EventsPage extends StatefulWidget {
 
 class _EventsPageState extends State<EventsPage> {
   //method that calls the past events
-  List<Event> items = List<Event>();
-  Future<String> fetchEvents() async {
-    List<Event> events = List<Event>();
-    var url =
-        'https://api.meetup.com/Tech4Hood-All-Things-Programming/events?&sign=true&photo-host=public&page=20&desc=true&status=past';
-    var response = await http.get(url);
+  List<Event> pastEvents;
+  List<Event> futureEvents;
 
-    if (response.statusCode == 200) {
-      // If the call to the server was successful, parse the JSON
-      var result = json.decode(response.body);
-      // loop through array of items and assing to list
-      for (int i = 0; i < result.length; i++) {
-        events.add(Event.fromJson(result[i]));
-      }
-
+  void _getPastEvents() {
+    API.getPastEvents().then((response) {
       setState(() {
-        items = events;
+        Iterable list = json.decode(response.body);
+        pastEvents = list.map((model) => Event.fromJson(model)).toList();
       });
+    });
+  }
 
-      return 'Success';
-    } else {
-      // If that call was not successful, throw an error.
-      throw Exception('Failed to load post');
-    }
+  void _getFutureEvents() {
+    API.getFutureEvents().then((response) {
+      setState(() {
+        Iterable list = json.decode(response.body);
+        futureEvents = list.map((model) => Event.fromJson(model)).toList();
+      });
+    });
   }
 
   @override
   void initState() {
     super.initState();
-
     //call to fetch the data
-    fetchEvents();
+    _getPastEvents();
+    _getFutureEvents();
+  }
+
+  //get list of events
+  Widget _getListOfEvents(List<Event> events) {
+    return ListView.builder(
+      itemCount: events == null ? 0 : events.length,
+      itemBuilder: (context, index) {
+        return Container(
+            padding: EdgeInsets.only(top: 20, left: 20, right: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 10, right: 10),
+                        child: Icon(
+                          Icons.calendar_today,
+                          color: Utilities.blueTwo,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 250,
+                              child: Text(
+                                events[index].name,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                            ),
+                            Text("Date: " + events[index].localDate),
+                            Text(events[index].venueName),
+                            Text(
+                              events[index].venueAddress,
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            Text(
+                              events[index].groupLocaltion,
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            RaisedButton(
+                              color: Utilities.blueOne,
+                              child: Text('details',
+                                  style: TextStyle(color: Colors.white)),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EventDetailsPage()),
+                                );
+                              },
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                Divider(
+                  color: Colors.grey[300],
+                  height: 1,
+                )
+              ],
+            ));
+      },
+    );
   }
 
   @override
@@ -68,40 +138,30 @@ class _EventsPageState extends State<EventsPage> {
           ),
           title: Text(widget.title),
         ),
-        body: TabBarView(
-          children: [
-            // tab 1 content
-            ListView.builder(
-              itemCount: items == null ? 0 : items.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Card(
-                          child: Container(
-                        child: Column(
-                          children: <Widget>[
-                            //TODO: this needs to be design, testing the data
-                            Text(items[index].name),
-                            Text(items[index].venueName),
-                            Text(items[index].groupLocaltion)
-        
-                          ],
+        body: pastEvents != null
+            ? TabBarView(
+                children: [
+                  // tab 1 content
+                  pastEvents.length > 0
+                      ? _getListOfEvents(pastEvents)
+                      : Center(
+                          child: Text("There's no data!"),
                         ),
-                      ))
-                    ],
-                  ),
-                );
-                // By default, show a loading spinner
-                //   return CircularProgressIndicator();
-              },
-            ),
 
-            // tab 2 content
-            Icon(Icons.date_range),
-          ],
-        ),
+                  // tab 2 content
+                  futureEvents.length > 0
+                      ? _getListOfEvents(futureEvents)
+                      : Center(
+                          child: Text(
+                            "Ther's no future events yet!",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        )
+                ],
+              )
+            : Center(
+                child: CircularProgressIndicator(),
+              ),
       ),
     );
   }
