@@ -20,20 +20,16 @@ class _EventsPageState extends State<EventsPage> {
   List<Event> pastEvents;
   List<Event> futureEvents;
 
-  void _getPastEvents() {
-    API.getPastEvents().then((response) {
+  void _getAllEvents() {
+    API.getAllEvents().then((response) {
       setState(() {
-        Iterable list = json.decode(response.body);
-        pastEvents = list.map((model) => Event.fromJson(model)).toList();
-      });
-    });
-  }
+        var allEvents = json.decode(response.body);
+        Iterable listPast = allEvents['pastEvents'];
+        Iterable listFuture = allEvents['upcomingEvents'];
 
-  void _getFutureEvents() {
-    API.getFutureEvents().then((response) {
-      setState(() {
-        Iterable list = json.decode(response.body);
-        futureEvents = list.map((model) => Event.fromJson(model)).toList();
+        pastEvents = listPast.map((model) => Event.fromJson(model)).toList();
+        futureEvents =
+            listFuture.map((model) => Event.fromJson(model)).toList();
       });
     });
   }
@@ -42,8 +38,7 @@ class _EventsPageState extends State<EventsPage> {
   void initState() {
     super.initState();
     //call to fetch the data
-    _getPastEvents();
-    _getFutureEvents();
+    _getAllEvents();
   }
 
   //get list of events
@@ -51,71 +46,69 @@ class _EventsPageState extends State<EventsPage> {
     return ListView.builder(
       itemCount: events == null ? 0 : events.length,
       itemBuilder: (context, index) {
-        return Container(
-            padding: EdgeInsets.only(top: 20, left: 20, right: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(bottom: 20),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 10, right: 10),
-                        child: Icon(
-                          Icons.calendar_today,
-                          color: Utilities.blueTwo,
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => EventDetailsPage(events[index])),
+            );
+          },
+          child: Container(
+              padding: EdgeInsets.only(top: 20, left: 20, right: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 10, right: 10),
+                          child: Icon(
+                            Icons.calendar_today,
+                            color: Utilities.blueTwo,
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 250,
-                              child: Text(
-                                events[index].name,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 15),
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 250,
+                                child: Text(
+                                  events[index].name,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15),
+                                ),
                               ),
-                            ),
-                            Text("Date: " + events[index].localDate),
-                            Text(events[index].venueName),
-                            Text(
-                              events[index].venueAddress,
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            Text(
-                              events[index].groupLocaltion,
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            RaisedButton(
-                              color: Utilities.blueOne,
-                              child: Text('details',
-                                  style: TextStyle(color: Colors.white)),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => EventDetailsPage()),
-                                );
-                              },
-                            )
-                          ],
-                        ),
-                      )
-                    ],
+                              Text("Date: " + events[index].localDate),
+                              Text(events[index].venueName),
+                              Text(
+                                events[index].venueAddress,
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              Text(
+                                events[index].groupLocaltion,
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
                   ),
-                ),
-                Divider(
-                  color: Colors.grey[300],
-                  height: 1,
-                )
-              ],
-            ));
+                  Divider(
+                    color: Colors.grey[300],
+                    height: 1,
+                  )
+                ],
+              )
+              ),
+        );
       },
     );
   }
